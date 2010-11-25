@@ -1,0 +1,5 @@
+
+content   formplow  content/
+resource  formplow  resource/
+overlay   chrome://browser/content/browser.xul  chrome://formplow/content/overlay.xul
+
