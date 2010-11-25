@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+  <!ENTITY % formplowDTD SYSTEM "chrome://formplow/locale/formplow.dtd"> %formplowDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://formplow/skin/formplow.css" type="text/css"?>
+<overlay id="formplow" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="overlay.js" />
+
+</overlay>
+

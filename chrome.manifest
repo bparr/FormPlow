@@ -1,5 +1,10 @@
 
-content   formplow  content/
-resource  formplow  resource/
+content   formplow           chrome/content/
+skin      formplow  default  chrome/skin/
+resource  formplow           resource/
+
+locale    formplow   en-US   chrome/locale/en-US/
+
 overlay   chrome://browser/content/browser.xul  chrome://formplow/content/overlay.xul
+
 
