@@ -1,14 +1,31 @@
 
 let FormPlow = {
   initialize: function() {
-    window.removeEventListener("load", FormPlow.initialize, false);
-    window.addEventListener("unload", FormPlow.shutdown, false);
+    let self = FormPlow;
 
-    window.dump("initialize\n");
+    Cu.import("resource://formplow/Utils.jsm", self);
+
+    window.removeEventListener("load", self.initialize, false);
+    window.addEventListener("unload", self.shutdown, false);
+    window.addEventListener("keydown", self.handleKeyDown, true);
   },
 
   shutdown: function() {
-    window.dump("shutdown\n");
+    let self = FormPlow;
+    window.removeEventListener("unload", self.shutdown, false);
+    window.removeEventListener("keydown", self.handleKeyDown, true);
+  },
+
+  handleKeyDown: function(aEvent) {
+    let self = FormPlow;
+    window.dump(self.isEventBlocked(aEvent) + "\n");
+  },
+
+  isEventBlocked: function(aEvent) {
+    if (aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey)
+      return false;
+
+    return !!this.Utils.blockedKeyCodes[aEvent.keyCode];
   }
 }
 
