@@ -8,6 +8,14 @@ let Cu = Components.utils;
 Components.utils.import("resource://formplow/Services.jsm");
 
 let Utils = {
+  // Set of blocked key codes
+  _blockedKeyCodes: null,
+
+  // Initialize Utils
+  initialize: function() {
+    this._initializeBlockedKeyCodes();
+  },
+
   // Check whether the event should be blocked
   isEventBlocked: function(aEvent) {
     // Check to see if user inputted a blocked key
@@ -79,8 +87,8 @@ let Utils = {
     return (Services.login.countLogins(hostname, "", null) > 0);
   },
 
-  // Lazily generate set of blocked key codes
-  get _blockedKeyCodes() {
+  // Initialize set of blocked key codes
+  _initializeBlockedKeyCodes: function() {
     // Generate alphanumeric keys
     let numericKeys = [];
     for (let i = 0; i < 10; i++)
@@ -99,18 +107,14 @@ let Utils = {
 
     // Retrieve key codes for blocked keys
     let blockedKeys = numericKeys.concat(alphaKeys, otherKeys);
-    let blockedKeyCodes = {};
+    this._blockedKeyCodes = {};
 
     let keyEvent = Ci.nsIDOMKeyEvent;
     blockedKeys.forEach(function(aKey) {
-      blockedKeyCodes[keyEvent["DOM_VK_" + aKey]] = true;
+      this._blockedKeyCodes[keyEvent["DOM_VK_" + aKey]] = true;
     }, this);
-
-    // Replace the getter with the set of blocked key codes
-    delete this._blockedKeyCodes;
-    this._blockedKeyCodes = blockedKeyCodes;
-
-    return blockedKeyCodes;
   }
 }
+
+Utils.initialize();
 
