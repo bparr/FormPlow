@@ -18,15 +18,14 @@ let FormPlow = {
 
   handleKeyDown: function(aEvent) {
     let self = FormPlow;
-    window.dump(self.isEventBlocked(aEvent) + "\n");
+
+    if (!self.Utils.isEventBlocked(aEvent))
+      return;
+
+    aEvent.preventDefault();
+    aEvent.stopPropagation();
+    return false;
   },
-
-  isEventBlocked: function(aEvent) {
-    if (aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey)
-      return false;
-
-    return !!this.Utils.blockedKeyCodes[aEvent.keyCode];
-  }
 }
 
 window.addEventListener("load", FormPlow.initialize, false);
