@@ -11,9 +11,13 @@ let Utils = {
   // Set of blocked key codes
   _blockedKeyCodes: null,
 
+  // Site whitelist
+  _whitelist: null,
+
   // Initialize Utils
-  initialize: function() {
+  _initialize: function() {
     this._initializeBlockedKeyCodes();
+    this._initializeWhitelist();
   },
 
   // Check whether the event should be blocked
@@ -30,14 +34,26 @@ let Utils = {
     if (!target || !(target instanceof Ci.nsIDOMHTMLElement))
       return false;
 
-    let topWindow = target.ownerDocument.defaultView.top;
-    let topURI = topWindow.document.documentURIObject;
+    let uri = this.getURIFromDocument(target.ownerDocument);
+    return !this._isSiteTrusted(uri);
+  },
 
-    return !this.isSiteTrusted(topURI);
+  // Add a site to the whitelist
+  trustSite: function(aURI) {
+    this._whitelist[aURI.host] = true;
+  },
+
+  // Get the URI of the top window given a document
+  getURIFromDocument: function(aDocument) {
+    let topWindow = aDocument.defaultView.top;
+    return topWindow.document.documentURIObject;
   },
 
   // Check if the site is trusted based on what the browser knows
-  isSiteTrusted: function(aURI) {
+  _isSiteTrusted: function(aURI) {
+    if (this._whitelist[aURI.host])
+      return true;
+
     return this._historyTest(aURI) || this._passwordTest(aURI);
   },
 
@@ -113,8 +129,13 @@ let Utils = {
     blockedKeys.forEach(function(aKey) {
       this._blockedKeyCodes[keyEvent["DOM_VK_" + aKey]] = true;
     }, this);
+  },
+
+  // Initialize set of whitelisted sites
+  _initializeWhitelist: function() {
+    this._whitelist = {};
   }
 }
 
-Utils.initialize();
+Utils._initialize();
 
