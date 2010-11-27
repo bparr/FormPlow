@@ -15,6 +15,11 @@ let Utils = {
     if (!this._blockedKeyCodes[aEvent.keyCode])
       return false;
 
+    // Check if the target is an HTML element
+    let target = aEvent.target;
+    if (!target || !(target instanceof Ci.nsIDOMHTMLElement))
+      return false;
+
     return true;
   },
 
