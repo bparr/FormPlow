@@ -11,5 +11,9 @@
 
   <script type="application/javascript" src="overlay.js" />
 
+  <box id="notification-popup-box">
+    <image id="formplow-notification-icon" class="notification-anchor-icon" role="button" />
+  </box>
+
 </overlay>
 

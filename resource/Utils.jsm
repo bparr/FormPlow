@@ -34,19 +34,14 @@ let Utils = {
     if (!target || !(target instanceof Ci.nsIDOMHTMLElement))
       return false;
 
-    let uri = this.getURIFromDocument(target.ownerDocument);
-    return !this._isSiteTrusted(uri);
+    let topWindow = target.ownerDocument.defaultView.top;
+    let topURI = topWindow.document.documentURIObject;
+    return !this._isSiteTrusted(topURI);
   },
 
   // Add a site to the whitelist
   trustSite: function(aURI) {
     this._whitelist[aURI.host] = true;
-  },
-
-  // Get the URI of the top window given a document
-  getURIFromDocument: function(aDocument) {
-    let topWindow = aDocument.defaultView.top;
-    return topWindow.document.documentURIObject;
   },
 
   // Check if the site is trusted based on what the browser knows
@@ -102,6 +97,21 @@ let Utils = {
 
     return (Services.login.countLogins(hostname, "", null) > 0);
   },
+
+  // Get localised message
+  // Based on https://developer.mozilla.org/En/Code_snippets/Miscellaneous#Using_string_bundles_from_JavaScript
+  getString: function(aMsg, aArgs) {
+    if (aArgs) {
+      aArgs = Array.prototype.slice.call(arguments, 1);
+      return this._stringBundle.formatStringFromName(aMsg, aArgs, aArgs.length);
+    }
+
+    return this._stringBundle.GetStringFromName(aMsg);
+  },
+
+  _stringBundle: Cc["@mozilla.org/intl/stringbundle;1"].
+                 getService(Ci.nsIStringBundleService).
+                 createBundle("chrome://formplow/locale/formplow.properties"),
 
   // Initialize set of blocked key codes
   _initializeBlockedKeyCodes: function() {
