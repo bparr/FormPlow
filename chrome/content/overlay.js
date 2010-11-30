@@ -4,6 +4,7 @@ let FormPlow = {
     let self = FormPlow;
 
     Cu.import("resource://formplow/Utils.jsm", self);
+    Cu.import("resource://formplow/Phish.jsm", self);
 
     window.removeEventListener("load", self.initialize, false);
     window.addEventListener("unload", self.shutdown, false);
@@ -19,7 +20,7 @@ let FormPlow = {
   handleKeyDown: function(aEvent) {
     let self = FormPlow;
 
-    if (!self.Utils.isEventBlocked(aEvent))
+    if (!self.Phish.isEventBlocked(aEvent))
       return;
 
     let ownerDocument = aEvent.target.ownerDocument;
@@ -40,7 +41,7 @@ let FormPlow = {
       label: self.Utils.getString("notification.mainAction.label"),
       accessKey: self.Utils.getString("notification.mainAction.accessKey"),
       callback: function() {
-        self.Utils.trustSite(uri);
+        self.Phish.trustSite(uri);
       }
     };
 

@@ -1,5 +1,5 @@
 
-let EXPORTED_SYMBOLS = ["Utils"];
+let EXPORTED_SYMBOLS = ["Phish"];
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
@@ -7,14 +7,14 @@ let Cu = Components.utils;
 
 Components.utils.import("resource://formplow/Services.jsm");
 
-let Utils = {
+let Phish = {
   // Set of blocked key codes
   _blockedKeyCodes: null,
 
   // Site whitelist
   _whitelist: null,
 
-  // Initialize Utils
+  // Initialize Phish
   _initialize: function() {
     this._initializeBlockedKeyCodes();
     this._initializeWhitelist();
@@ -101,21 +101,6 @@ let Utils = {
     return (Services.login.countLogins(hostname, "", null) > 0);
   },
 
-  // Get localised message
-  // Based on https://developer.mozilla.org/En/Code_snippets/Miscellaneous#Using_string_bundles_from_JavaScript
-  getString: function(aMsg, aArgs) {
-    if (aArgs) {
-      aArgs = Array.prototype.slice.call(arguments, 1);
-      return this._stringBundle.formatStringFromName(aMsg, aArgs, aArgs.length);
-    }
-
-    return this._stringBundle.GetStringFromName(aMsg);
-  },
-
-  _stringBundle: Cc["@mozilla.org/intl/stringbundle;1"].
-                 getService(Ci.nsIStringBundleService).
-                 createBundle("chrome://formplow/locale/formplow.properties"),
-
   // Initialize set of blocked key codes
   _initializeBlockedKeyCodes: function() {
     // Generate alphanumeric keys
@@ -150,5 +135,5 @@ let Utils = {
   }
 }
 
-Utils._initialize();
+Phish._initialize();
 
