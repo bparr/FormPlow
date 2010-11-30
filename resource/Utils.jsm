@@ -36,6 +36,9 @@ let Utils = {
 
     let topWindow = target.ownerDocument.defaultView.top;
     let topURI = topWindow.document.documentURIObject;
+    if (topURI.scheme != "http" && topURI.scheme != "https")
+      return false;
+
     return !this._isSiteTrusted(topURI);
   },
 
