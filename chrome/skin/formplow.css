@@ -11,3 +11,7 @@
   display: -moz-box;
 }
 
+.autocomplete-treebody::-moz-tree-cell(formplowTopBorder) {
+  border-top: 1px solid black;
+}
+
