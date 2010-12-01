@@ -5,7 +5,7 @@ let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 
-Components.utils.import("resource://formplow/Services.jsm");
+Cu.import("resource://formplow/Services.jsm");
 
 let Phish = {
   // Set of blocked key codes

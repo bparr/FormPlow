@@ -2,10 +2,12 @@
 // Modeled off of toolkit/content/Services.jsm
 let EXPORTED_SYMBOLS = ["Services"];
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+let Cu = Components.utils;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let obj = {};
-Components.utils.import("resource://gre/modules/Services.jsm", obj);
+Cu.import("resource://gre/modules/Services.jsm", obj);
 let Default = obj.Services;
 
 let Services = {};
