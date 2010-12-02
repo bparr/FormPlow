@@ -15,5 +15,14 @@
     <image id="formplow-notification-icon" class="notification-anchor-icon" role="button" />
   </box>
 
+  <popupset id="mainPopupSet">
+    <panel id="formplow-form-panel" noautofocus="true" hidden="true">
+      <description />
+      <hbox>
+        <button id="formplow-form-panel-button" label="&formplow.panel.button;" />
+      </hbox>
+    </panel>
+  </popupset>
+
 </overlay>
 

@@ -1,20 +1,38 @@
 
 let FormPlow = {
+  _formPanel: null,
+  _autoFillData: null,
+
   initialize: function() {
     let self = FormPlow;
 
     Cu.import("resource://formplow/Utils.jsm", self);
     Cu.import("resource://formplow/Phish.jsm", self);
+    Cu.import("resource://formplow/AutoFill.jsm", self);
 
     window.removeEventListener("load", self.initialize, false);
     window.addEventListener("unload", self.shutdown, false);
     window.addEventListener("keydown", self.handleKeyDown, true);
+
+    let popup = document.getElementById("PopupAutoComplete");
+    popup.addEventListener("popuphiding", self.handlePopupHiding, true);
+
+    let button = document.getElementById("formplow-form-panel-button");
+    button.addEventListener("command", self.handleButtonCommand, true);
+
+    self._formPanel = document.getElementById("formplow-form-panel");
   },
 
   shutdown: function() {
     let self = FormPlow;
     window.removeEventListener("unload", self.shutdown, false);
     window.removeEventListener("keydown", self.handleKeyDown, true);
+
+    let popup = document.getElementById("PopupAutoComplete");
+    popup.removeEventListener("popuphiding", self.handlePopupHiding, true);
+
+    let button = document.getElementById("formplow-form-panel-button");
+    button.removeEventListener("command", self.handleButtonCommand, true);
   },
 
   handleKeyDown: function(aEvent) {
@@ -60,6 +78,33 @@ let FormPlow = {
 
     PopupNotifications.show(browser, notificationID, message, anchorID,
                             mainAction, secondaryActions, options);
+  },
+
+  handlePopupHiding: function(aEvent) {
+    let self = FormPlow;
+
+    self._autoFillData = self.AutoFill.handlePopupHiding(aEvent);
+    if (self._autoFillData == null ||
+        self._autoFillData.warnings.length == 0)
+      return;
+
+    let description = self._formPanel.firstChild;
+    let warnings = self._autoFillData.warnings.join(" and ");
+    description.textContent = self.Utils.getString("panel.message", warnings);
+
+    self._autoFillData.field.focus();
+    self._formPanel.hidden = false;
+    self._formPanel.openPopup(self._autoFillData.field, "after_start", 0, 0);
+  },
+
+  handleButtonCommand: function(aEvent) {
+    let self = FormPlow;
+
+    self._formPanel.hidePopup();
+    self._formPanel.hidden = true;
+
+    self.AutoFill.refill(self._autoFillData);
+    self._autoFillData = null;
   },
 
   _getBrowser: function(aWindow) {
