@@ -52,6 +52,12 @@ let FormPlow = {
     }
 
     const notificationID = "formplow";
+    if (PopupNotifications.getNotification(notificationID, browser) &&
+        browser._formplowLastHost &&
+        browser._formplowLastHost == uri.host) {
+      return;
+    }
+
     let message = self.Utils.getString("notification.message", uri.host);
     const anchorID = "formplow-notification-icon";
 
@@ -76,6 +82,7 @@ let FormPlow = {
       persistWhileVisible: true
     };
 
+    browser._formplowLastHost = uri.host;
     PopupNotifications.show(browser, notificationID, message, anchorID,
                             mainAction, secondaryActions, options);
   },
