@@ -13,7 +13,7 @@ let Default = obj.Services;
 let Services = {};
 
 // Use default (built-in) services
-["io"].forEach(function(aService) {
+["dirsvc", "io", "prefs"].forEach(function(aService) {
  XPCOMUtils.defineLazyGetter(Services, aService, function() Default[aService]);
 });
 

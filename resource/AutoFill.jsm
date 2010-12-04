@@ -6,49 +6,16 @@ let Ci = Components.interfaces;
 let Cu = Components.utils;
 
 Cu.import("resource://formplow/Services.jsm");
+Cu.import("resource://formplow/Utils.jsm");
 
-let gProfiles = [{
-  firstName:   "Bob",
-  lastName:    "Smith",
-  middleName:  "Thomas",
-  fullName:    "Bob Thomas Smith",
-  email:       "bob@smith.com",
-  areaCode:    "412",
-  phonePrefix: "291",
-  phoneSuffix: "1938",
-  fullPhone:   "4122911938",
-  address:     "Carnegie Mellon University",
-  address2:    "5032 Forbes Avenue",
-  city:        "Pittsburgh",
-  state:       "Pennsylvania",
-  zip:         "15213",
+let Constructor = Components.Constructor;
+let nsLoginInfo = new Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                  Ci.nsILoginInfo,
+                                  "init");
 
-  warnings:    [ "address", "phone" ]
-}, {
-  firstName:   "Robert",
-  lastName:    "Smith",
-  middleName:  "Thomas",
-  fullName:    "Robert Thomas Smith",
-  email:       "rsmith@work.com",
-  areaCode:    "412",
-  phonePrefix: "142",
-  phoneSuffix: "4461",
-  fullPhone:   "4121424461",
-  address:     "5032 Forbes Avenue",
-  address2:    "SMC 1888",
-  city:        "Pittsburgh",
-  state:       "Pennsylvania",
-  zip:         "15213",
-
-  warnings:    [],
-}];
-
-let gEntryNames = [
-  "Bob Smith - bob@smith.com",
-  "Robert Smith - rsmith@work.com"
-]
-
-
+const kProfileNamesPref = "extensions.formplow.profileNames";
+const kProfileHost      = "chrome://formplow";
+const kProfileRealm     = "FormPlow Profile";
 
 let AutoFill = {
   _currentField: null,
@@ -56,24 +23,63 @@ let AutoFill = {
     return this._currentField;
   },
 
-  getEntryNames: function(aField) {
-    this._currentField = aField;
-    return gEntryNames;
+  get _profiles() {
+    let profiles = this._getStoredProfiles();
+    if (profiles == null) {
+      profiles = this._defaultProfiles;
+      let profileNames = profiles.map(function(aProfile) aProfile.profileName);
+
+      this._storeProfileNames(profileNames);
+      this._storeProfiles(profiles);
+    }
+
+    delete this._profiles;
+    this._profiles = profiles;
+    return profiles;
   },
 
-  handlePopupHiding: function(aEvent) {
+  get _profileNames() {
+    let profileNames = this._getStoredProfileNames();
+    if (profileNames == null) {
+      let profiles = this._defaultProfiles;
+      profileNames = profiles.map(function(aProfile) aProfile.profileName);
+
+      this._storeProfileNames(profileNames);
+    }
+
+    delete this._profileNames;
+    this._profileNames = profileNames;
+    return profileNames;
+  },
+
+  getEntryNames: function(aField) {
+    this._currentField = aField;
+    return this._profileNames;
+  },
+
+  handlePopupHidden: function(aEvent) {
     let popup = aEvent.target;
     let textValue = popup.input.textValue;
 
-    let index = gEntryNames.indexOf(textValue);
-    if (index < 0)
-      return null;
-
-    let profile = gProfiles[index];
     let field = this._currentField;
     this._currentField = null;
 
-    let ret = {
+    if (this._profileNames.indexOf(textValue) < 0)
+      return null;
+
+    let profiles = this._profiles;
+    let profile = null;
+    for (let i = 0; i < this._profiles.length; i++) {
+      if (textValue == this._profiles[i].profileName) {
+        profile = this._profiles[i];
+        break;
+      }
+    }
+
+    if (profile == null)
+      return null;
+
+    let rv = {
       profile:  profile,
       field:    field,
       warnings: null
@@ -81,14 +87,14 @@ let AutoFill = {
 
     if (field.form != null) {
       let typesUsed = this.fill(field.form, profile);
-      ret.warnings = profile.warnings.filter(function(aType) !!typesUsed[aType]);
+      rv.warnings = profile.warnings.filter(function(aType) !!typesUsed[aType]);
     }
     else {
       let type = this.fillField(field, profile);
-      ret.warnings = (type != null) ? [type] : [];
+      rv.warnings = (type != null) ? [type] : [];
     }
 
-    return ret;
+    return rv;
   },
 
   refill: function(aData) {
@@ -132,6 +138,43 @@ let AutoFill = {
     }
 
     return null
+  },
+
+  _getStoredProfiles: function() {
+    let logins = Services.login.findLogins({}, kProfileHost,
+                                           null, kProfileRealm);
+    if (logins.length == 0)
+      return null;
+
+    return logins.map(function(aLogin) JSON.parse(aLogin.password));
+  },
+
+  _storeProfiles: function(aProfiles) {
+    aProfiles.forEach(function(aProfile) {
+      let username = aProfile.profileName;
+      let password = JSON.stringify(aProfile);
+
+      let loginInfo = new nsLoginInfo(kProfileHost, null, kProfileRealm,
+                                      username, password, "", "");
+      Services.login.addLogin(loginInfo);
+    });
+  },
+
+  _getStoredProfileNames: function() {
+    let profileNames = null;
+    try {
+      let prefValue = Services.prefs.getCharPref(kProfileNamesPref);
+      if (prefValue)
+        profileNames = JSON.parse(prefValue);
+    }
+    catch(e) {}
+
+    return profileNames;
+  },
+
+  _storeProfileNames: function(aProfileNames) {
+    let prefValue = JSON.stringify(aProfileNames);
+    Services.prefs.setCharPref(kProfileNamesPref, prefValue);
   },
 
   _profileProperties: {
@@ -235,6 +278,44 @@ let AutoFill = {
       // zip, postalcode, postal code, postal_code
       regex: new RegExp("^(zip|postal( |_)?code)$", "i")
     }
-  }
+  },
+
+  _defaultProfiles: [{
+    firstName:   "Bob",
+    lastName:    "Smith",
+    middleName:  "Thomas",
+    fullName:    "Bob Thomas Smith",
+    email:       "bob@smith.com",
+    areaCode:    "412",
+    phonePrefix: "291",
+    phoneSuffix: "1938",
+    fullPhone:   "4122911938",
+    address:     "Carnegie Mellon University",
+    address2:    "5032 Forbes Avenue",
+    city:        "Pittsburgh",
+    state:       "Pennsylvania",
+    zip:         "15213",
+
+    profileName: "Bob Smith - bob@smith.com",
+    warnings:    [ "address", "phone" ]
+  }, {
+    firstName:   "Robert",
+    lastName:    "Smith",
+    middleName:  "Thomas",
+    fullName:    "Robert Thomas Smith",
+    email:       "rsmith@work.com",
+    areaCode:    "412",
+    phonePrefix: "142",
+    phoneSuffix: "4461",
+    fullPhone:   "4121424461",
+    address:     "5032 Forbes Avenue",
+    address2:    "SMC 1888",
+    city:        "Pittsburgh",
+    state:       "Pennsylvania",
+    zip:         "15213",
+
+    profileName: "Robert Smith - rsmith@work.com",
+    warnings:    []
+  }]
 }
 

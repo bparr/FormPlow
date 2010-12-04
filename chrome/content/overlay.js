@@ -15,7 +15,7 @@ let FormPlow = {
     window.addEventListener("keydown", self.handleKeyDown, true);
 
     let popup = document.getElementById("PopupAutoComplete");
-    popup.addEventListener("popuphiding", self.handlePopupHiding, true);
+    popup.addEventListener("popuphidden", self.handlePopupHidden, true);
 
     let button = document.getElementById("formplow-form-panel-button");
     button.addEventListener("command", self.handleButtonCommand, true);
@@ -29,7 +29,7 @@ let FormPlow = {
     window.removeEventListener("keydown", self.handleKeyDown, true);
 
     let popup = document.getElementById("PopupAutoComplete");
-    popup.removeEventListener("popuphiding", self.handlePopupHiding, true);
+    popup.removeEventListener("popuphidden", self.handlePopupHidden, true);
 
     let button = document.getElementById("formplow-form-panel-button");
     button.removeEventListener("command", self.handleButtonCommand, true);
@@ -87,10 +87,10 @@ let FormPlow = {
                             mainAction, secondaryActions, options);
   },
 
-  handlePopupHiding: function(aEvent) {
+  handlePopupHidden: function(aEvent) {
     let self = FormPlow;
 
-    self._autoFillData = self.AutoFill.handlePopupHiding(aEvent);
+    self._autoFillData = self.AutoFill.handlePopupHidden(aEvent);
     if (self._autoFillData == null ||
         self._autoFillData.warnings.length == 0)
       return;

@@ -1,0 +1,3 @@
+
+pref("extensions.formplow.profileNames", "");
+
