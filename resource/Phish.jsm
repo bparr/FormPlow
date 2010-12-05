@@ -42,7 +42,10 @@ let Phish = {
 
   // Add a site to the whitelist
   trustSite: function(aURI) {
+    // Add the site to the whitelist object
     this._whitelist[aURI.host] = true;
+
+    // Add the site to the preference so that it persists
     let whitelistSites = [];
     for(let i in this._whitelist)
       whitelistSites.push(i);
@@ -51,6 +54,7 @@ let Phish = {
     Services.prefs.setCharPref(kWhitelistPref, prefValue);
   },
 
+  // Get the URI object of the top window that aElement is on
   getURIFromElement: function(aElement) {
     let topWindow = aElement.ownerDocument.defaultView.top;
     return topWindow.document.documentURIObject;
@@ -146,6 +150,7 @@ let Phish = {
     let self = this;
     this._whitelist = {};
 
+    // Attempt to retrieve stored whitelist
     try {
       let prefValue = Services.prefs.getCharPref(kWhitelistPref);
       if (prefValue) {
