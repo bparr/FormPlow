@@ -1,4 +1,7 @@
 
+// A wrapper for the original nsIInputListAutoComplete that inserts AutoFill
+// options into the start of the AutoComplete results
+
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
@@ -19,10 +22,13 @@ FormAutoComplete.prototype = {
 
   autoCompleteSearch: function (aInputName, aSearchString, aField, aPrevious) {
     let result = Original.autoCompleteSearch.apply(Original, arguments);
+
+    // Get AutoFill entries to insert
     let newEntryNames = AutoFill.getEntryNames(aField);
     if (newEntryNames == null)
       return result;
 
+    // Insert the entries into the results
     let newComments = newEntryNames.map(function() "");
     let wrapped = result.wrappedJSObject;
     wrapped._values = newEntryNames.concat(wrapped._values);
@@ -36,6 +42,7 @@ FormAutoComplete.prototype = {
         throw Components.Exception("Index out of range.", Cr.NS_ERROR_ILLEGAL_VALUE);
     }
 
+    // Replace getImageAt, so that AutoFill entries have an image
     wrapped.getImageAt = function(aIndex) {
       checkIndexBounds(aIndex);
       if (aIndex < numNew)
@@ -44,6 +51,8 @@ FormAutoComplete.prototype = {
       return "";
     }
 
+    // Replace getStyleAt so that there is a line separating AutoFill options
+    // and standard options
     wrapped.getStyleAt = function(aIndex) {
       checkIndexBounds(aIndex);
       return (aIndex == numNew) ? "formplowTopBorder" : "";
