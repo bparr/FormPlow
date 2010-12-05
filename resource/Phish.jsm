@@ -7,6 +7,8 @@ let Cu = Components.utils;
 
 Cu.import("resource://formplow/Services.jsm");
 
+const kWhitelistPref = "extensions.formplow.whitelist";
+
 let Phish = {
   // Set of blocked key codes
   _blockedKeyCodes: null,
@@ -41,6 +43,12 @@ let Phish = {
   // Add a site to the whitelist
   trustSite: function(aURI) {
     this._whitelist[aURI.host] = true;
+    let whitelistSites = [];
+    for(let i in this._whitelist)
+      whitelistSites.push(i);
+
+    let prefValue = JSON.stringify(whitelistSites);
+    Services.prefs.setCharPref(kWhitelistPref, prefValue);
   },
 
   getURIFromElement: function(aElement) {
@@ -135,7 +143,19 @@ let Phish = {
 
   // Initialize set of whitelisted sites
   _initializeWhitelist: function() {
+    let self = this;
     this._whitelist = {};
+
+    try {
+      let prefValue = Services.prefs.getCharPref(kWhitelistPref);
+      if (prefValue) {
+        let whitelistSites = JSON.parse(prefValue);
+        whitelistSites.forEach(function(aSite) {
+          self._whitelist[aSite] = true;
+        });
+      }
+    }
+    catch (e) {}
   }
 }
 
