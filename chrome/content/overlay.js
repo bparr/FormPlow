@@ -70,8 +70,15 @@ let FormPlow = {
     };
 
     let secondaryActions = [{
-      label: self.Utils.getString("notification.secondaryAction.label"),
-      accessKey: self.Utils.getString("notification.secondaryAction.accessKey"),
+      label: self.Utils.getString("notification.secondaryAction1.label"),
+      accessKey: self.Utils.getString("notification.secondaryAction1.accessKey"),
+      callback: function() {
+        alert(self.Utils.getString("sitereported.message"));
+        browser.goHome();
+      }
+    }, {
+      label: self.Utils.getString("notification.secondaryAction2.label"),
+      accessKey: self.Utils.getString("notification.secondaryAction2.accessKey"),
       callback: function() {
         BrowserPageInfo(null, "securityTab");
       }
@@ -85,6 +92,7 @@ let FormPlow = {
     browser._formplowLastHost = uri.host;
     PopupNotifications.show(browser, notificationID, message, anchorID,
                             mainAction, secondaryActions, options);
+    aEvent.target.focus();
   },
 
   handlePopupHidden: function(aEvent) {
