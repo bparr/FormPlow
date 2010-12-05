@@ -5,6 +5,7 @@ let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 
+Cu.import("resource://formplow/Phish.jsm");
 Cu.import("resource://formplow/Services.jsm");
 Cu.import("resource://formplow/Utils.jsm");
 
@@ -53,6 +54,10 @@ let AutoFill = {
   },
 
   getEntryNames: function(aField) {
+    let uri = Phish.getURIFromElement(aField);
+    if (!Phish.isSiteTrusted(uri))
+      return null;
+
     this._currentField = aField;
     return this._profileNames;
   },

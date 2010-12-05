@@ -34,12 +34,8 @@ let Phish = {
     if (!target || !(target instanceof Ci.nsIDOMHTMLElement))
       return false;
 
-    let topWindow = target.ownerDocument.defaultView.top;
-    let topURI = topWindow.document.documentURIObject;
-    if (topURI.scheme != "http" && topURI.scheme != "https")
-      return false;
-
-    return !this._isSiteTrusted(topURI);
+    let uri = this.getURIFromElement(target);
+    return !this.isSiteTrusted(uri);
   },
 
   // Add a site to the whitelist
@@ -47,9 +43,17 @@ let Phish = {
     this._whitelist[aURI.host] = true;
   },
 
+  getURIFromElement: function(aElement) {
+    let topWindow = aElement.ownerDocument.defaultView.top;
+    return topWindow.document.documentURIObject;
+  },
+
   // Check if the site is trusted based on what the browser knows
-  _isSiteTrusted: function(aURI) {
+  isSiteTrusted: function(aURI) {
     if (this._whitelist[aURI.host])
+      return true;
+
+    if (aURI.scheme != "http" && aURI.scheme != "https")
       return true;
 
     return this._historyTest(aURI) || this._passwordTest(aURI);
