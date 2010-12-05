@@ -19,17 +19,22 @@ const kProfileHost      = "chrome://formplow";
 const kProfileRealm     = "FormPlow Profile";
 
 let AutoFill = {
+  // The current field the AutoComplete box is attatched to
   _currentField: null,
   get currentField() {
     return this._currentField;
   },
 
+  // Array of user profiles
+  // Note: the information in these profiles is stored in the Login Manager
+  // alongside passwords. So, it is encrypted if the user has a Master Password.
   get _profiles() {
     let profiles = this._getStoredProfiles();
     if (profiles == null) {
       profiles = this._defaultProfiles;
-      let profileNames = profiles.map(function(aProfile) aProfile.profileName);
 
+      // Store the profiles and corresponding profile names
+      let profileNames = profiles.map(function(aProfile) aProfile.profileName);
       this._storeProfileNames(profileNames);
       this._storeProfiles(profiles);
     }
@@ -39,12 +44,15 @@ let AutoFill = {
     return profiles;
   },
 
+  // Array of profile names that are displayed in the AutoComplete box
+  // Note: these names are not stored in an encrypted form
   get _profileNames() {
     let profileNames = this._getStoredProfileNames();
     if (profileNames == null) {
       let profiles = this._defaultProfiles;
       profileNames = profiles.map(function(aProfile) aProfile.profileName);
 
+      // Store the profile names
       this._storeProfileNames(profileNames);
     }
 
@@ -53,7 +61,9 @@ let AutoFill = {
     return profileNames;
   },
 
+  // Get array of profile names to show in AutoComplete box
   getEntryNames: function(aField) {
+    // Only AutoFill on trusted sites
     let uri = Phish.getURIFromElement(aField);
     if (!Phish.isSiteTrusted(uri))
       return null;
@@ -62,6 +72,8 @@ let AutoFill = {
     return this._profileNames;
   },
 
+  // Handle when the AutoComplete box is closed (i.e. the user has finished
+  // autocompleting)
   handlePopupHidden: function(aEvent) {
     let popup = aEvent.target;
     let textValue = popup.input.textValue;
@@ -69,11 +81,14 @@ let AutoFill = {
     let field = this._currentField;
     this._currentField = null;
 
+    // Do nothing if an AutoFill entry was not selected
     if (this._profileNames.indexOf(textValue) < 0)
       return null;
 
     let profiles = this._profiles;
     let profile = null;
+
+    // Find corresponding AutoFill profile
     for (let i = 0; i < this._profiles.length; i++) {
       if (textValue == this._profiles[i].profileName) {
         profile = this._profiles[i];
@@ -91,10 +106,12 @@ let AutoFill = {
     };
 
     if (field.form != null) {
+      // If the field is part of a form, AutoFill entire form
       let typesUsed = this.fill(field.form, profile);
       rv.warnings = profile.warnings.filter(function(aType) !!typesUsed[aType]);
     }
     else {
+      // Only AutoFill the field if it is not part of a form
       let type = this.fillField(field, profile);
       rv.warnings = (type != null) ? [type] : [];
     }
@@ -102,6 +119,8 @@ let AutoFill = {
     return rv;
   },
 
+  // Re-AutoFill, ignoring the warnings
+  // Note: this is called after a user confirms the warnings should be ignored
   refill: function(aData) {
     if (aData.field.form != null)
       this.fill(aData.field.form, aData.profile, aData.warnings);
@@ -109,6 +128,7 @@ let AutoFill = {
       this.fillField(aData.field, aData.profile, aData.warnings);
   },
 
+  // Fill entire form
   fill: function(aForm, aProfile, aIgnoredWarnings) {
     let typesUsed = {};
     for (let i = 0; i < aForm.elements.length; i++) {
@@ -121,12 +141,15 @@ let AutoFill = {
     return typesUsed;
   },
 
+  // Fill a field unless the user has set warning flag for the given field type
   fillField: function(aInput, aProfile, aIgnoredWarnings) {
+    // Ignore field if not a text input, or has no name attribute
     if (aInput.tagName.toLowerCase() != "input" ||
         aInput.type != "text" ||
         !aInput.name)
       return null;
 
+    // Match field name to a profile property
     let name = aInput.name;
     for (let propertyName in this._profileProperties) {
       let profileProperty = this._profileProperties[propertyName];
@@ -135,6 +158,8 @@ let AutoFill = {
 
       // Found match
       let type = profileProperty.type;
+
+      // Don't fill in field if the user wants a warning before filling
       if (aProfile.warnings.indexOf(type) < 0 ||
           (aIgnoredWarnings && aIgnoredWarnings.indexOf(type) >= 0))
         aInput.value = aProfile[propertyName];
@@ -145,6 +170,7 @@ let AutoFill = {
     return null
   },
 
+  // Get array of stored profiles from the Login Manager
   _getStoredProfiles: function() {
     let logins = Services.login.findLogins({}, kProfileHost,
                                            null, kProfileRealm);
@@ -154,6 +180,7 @@ let AutoFill = {
     return logins.map(function(aLogin) JSON.parse(aLogin.password));
   },
 
+  // Add a profile to the Login Manager
   _storeProfiles: function(aProfiles) {
     aProfiles.forEach(function(aProfile) {
       let username = aProfile.profileName;
@@ -165,8 +192,11 @@ let AutoFill = {
     });
   },
 
+  // Get the stored profile names from the preference
   _getStoredProfileNames: function() {
     let profileNames = null;
+
+    // Attempt to parse profile names from preference
     try {
       let prefValue = Services.prefs.getCharPref(kProfileNamesPref);
       if (prefValue)
@@ -177,11 +207,13 @@ let AutoFill = {
     return profileNames;
   },
 
+  // Store array of profile names in the preference
   _storeProfileNames: function(aProfileNames) {
     let prefValue = JSON.stringify(aProfileNames);
     Services.prefs.setCharPref(kProfileNamesPref, prefValue);
   },
 
+  // Descriptions of the set of profile properties
   _profileProperties: {
     firstName: {
       type: "name",
@@ -285,6 +317,7 @@ let AutoFill = {
     }
   },
 
+  // Hardcoded set of default profiles (for sake of prototype)
   _defaultProfiles: [{
     firstName:   "Bob",
     lastName:    "Smith",
